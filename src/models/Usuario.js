@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 
 const UsuarioSchema = new mongoose.Schema({
-  nombre: {
+  name: {
     type: String,
     required: [true, "El nombre es obligatorio"],
     trim: true, // elimina espacios en blanco
   },
-  correo: {
+  mail: {
     type: String,
     required: [true, "El correo es obligatorio"],
     unique: true, // evita correos duplicados
@@ -17,16 +17,16 @@ const UsuarioSchema = new mongoose.Schema({
     required: [true, "La contraseña es obligatoria"],
     minlength: [6, "La contraseña debe tener al menos 6 caracteres"],
   },
-  foto: {
+  photo: {
     type: String,
     default: "",
   },
-  telefono: {
+  number: {
     type: Number,
   },
-  tipo_usuario: {
+  type_user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "TipoUsuario",
+    ref: "TypeUser",
   },
 });
 
