@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+import usuarioRoutes from "./routes/usuarioRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -15,6 +16,8 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ Conectado a MongoDB"))
   .catch((err) => console.error("❌ Error conectando a MongoDB:", err));
+
+app.use("/api/usuarios", usuarioRoutes);
 
 // Rutas básicas
 app.get("/", (req, res) => {

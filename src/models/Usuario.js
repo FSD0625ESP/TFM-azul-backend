@@ -1,12 +1,34 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const UsuarioSchema = new mongoose.Schema({
-  nombre: String,
-  correo: String,
-  password: String,
-  foto: String,
-  telefono: Number,
-  tipo_usuario: { type: mongoose.Schema.Types.ObjectId, ref: "TipoUsuario" },
+  nombre: {
+    type: String,
+    required: [true, "El nombre es obligatorio"],
+    trim: true, // elimina espacios en blanco
+  },
+  correo: {
+    type: String,
+    required: [true, "El correo es obligatorio"],
+    unique: true, // evita correos duplicados
+    lowercase: true, // guarda el correo en minúsculas
+  },
+  password: {
+    type: String,
+    required: [true, "La contraseña es obligatoria"],
+    minlength: [6, "La contraseña debe tener al menos 6 caracteres"],
+  },
+  foto: {
+    type: String,
+    default: "",
+  },
+  telefono: {
+    type: Number,
+  },
+  tipo_usuario: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "TipoUsuario",
+  },
 });
 
-module.exports = mongoose.model("Usuario", UsuarioSchema);
+const Usuario = mongoose.model("Usuario", UsuarioSchema);
+export default Usuario;
