@@ -1,85 +1,87 @@
 import jwt from "jsonwebtoken";
-import Usuario from "../models/Usuario.js";
+import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 
-export const registrarUsuario = async (req, res) => {
+// Register User
+export const registerUser = async (req, res) => {
   try {
-    const { nombre, correo, password, foto, telefono, tipo_usuario } = req.body;
+    const { name, email, password, photo, phone, user_type } = req.body;
 
-    if (!nombre || !correo || !password) {
+    if (!name || !email || !password) {
       return res
         .status(400)
-        .json({ mensaje: "Nombre, correo y contraseña son obligatorios" });
+        .json({ message: "Name, email and password are required" });
     }
 
-    const usuarioExistente = await Usuario.findOne({ correo });
-    if (usuarioExistente) {
-      return res.status(400).json({ mensaje: "El correo ya está en uso" });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already in use" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const nuevoUsuario = new Usuario({
-      nombre,
-      correo,
+    const newUser = new User({
+      name,
+      email,
       password: hashedPassword,
-      foto,
-      telefono,
-      tipo_usuario,
+      photo,
+      phone,
+      user_type,
     });
 
-    await nuevoUsuario.save();
+    await newUser.save();
 
-    res.status(201).json({ mensaje: "Usuario registrado correctamente" });
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    console.error("❌ Error al registrar usuario:", error);
-    res.status(500).json({ mensaje: "Error interno del servidor" });
+    console.error("❌ Error registering user:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export const loginUsuario = async (req, res) => {
+// Login User
+export const loginUser = async (req, res) => {
   try {
-    const { correo, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!correo || !password) {
+    if (!email || !password) {
       return res
         .status(400)
-        .json({ mensaje: "Correo y contraseña son obligatorios" });
+        .json({ message: "Email and password are required" });
     }
 
-    const usuario = await Usuario.findOne({ correo });
+    const user = await User.findOne({ email });
 
-    if (!usuario) {
-      return res.status(404).json({ mensaje: "Usuario no encontrado" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    const esPasswordValido = await bcrypt.compare(password, usuario.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    if (!esPasswordValido) {
-      return res.status(401).json({ mensaje: "Contraseña incorrecta" });
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Incorrect password" });
     }
 
-    // Crear token JWT
+    // Generate JWT
     const token = jwt.sign(
-      { id: usuario._id, correo: usuario.correo },
+      { id: user._id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
     );
 
     res.status(200).json({
-      mensaje: "Login exitoso",
+      message: "Login successful",
       token,
-      usuario: {
-        id: usuario._id,
-        nombre: usuario.nombre,
-        correo: usuario.correo,
-        foto: usuario.foto,
-        telefono: usuario.telefono,
-        tipo_usuario: usuario.tipo_usuario,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        photo: user.photo,
+        phone: user.phone,
+        user_type: user.user_type,
       },
     });
   } catch (error) {
-    console.error("❌ Error en login:", error);
-    res.status(500).json({ mensaje: "Error interno del servidor" });
+    console.error("❌ Login error:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
