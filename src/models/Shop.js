@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const ShopSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -8,4 +8,5 @@ const ShopSchema = new mongoose.Schema({
   name: String,
 });
 
-module.exports = mongoose.model("Shop", ShopSchema);
+const Shop = mongoose.model("Shop", ShopSchema);
+export default Shop;
