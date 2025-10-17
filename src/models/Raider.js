@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
 const RaiderSchema = new mongoose.Schema({
-  usuario: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario" },
-  estado: Boolean,
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  state: Boolean,
 });
 
 module.exports = mongoose.model("Raider", RaiderSchema);
