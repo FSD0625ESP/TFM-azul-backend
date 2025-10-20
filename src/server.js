@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import usuarioRoutes from "./routes/usuarioRoutes.js";
 import shopRoutes from "./routes/shopRoutes.js";
+import createMarkRoutes from "./routes/createMark.js";
 
 dotenv.config();
 const app = express();
@@ -18,10 +19,14 @@ mongoose
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.error("Error connecting to MongoDB:", err));
 
+// Rutas existentes
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/shops", shopRoutes);
 
-// Rutas básicas
+// Nueva ruta para registrar Shop y Mark
+app.use("/api/createMark", createMarkRoutes);
+
+// Ruta básica
 app.get("/", (req, res) => {
   res.json({ message: "API working correctly" });
 });

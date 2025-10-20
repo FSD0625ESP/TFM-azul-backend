@@ -1,11 +1,11 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const MarkSchema = new mongoose.Schema({
-  state: Boolean,
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  type_mark: { type: mongoose.Schema.Types.ObjectId, ref: "TypeMark" },
-  lat: String,
-  long: String,
+  state: { type: Boolean, default: true },
+  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  type_mark: { type: String, enum: ["shop", "homeless"], required: true },
+  lat: { type: String, required: true },
+  long: { type: String, required: true },
 });
 
-module.exports = mongoose.model("Mark", MarkSchema);
+export default mongoose.model("Mark", MarkSchema);
