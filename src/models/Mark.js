@@ -6,6 +6,7 @@ const MarkSchema = new mongoose.Schema({
   type_mark: { type: String, enum: ["shop", "homeless"], required: true },
   lat: { type: String, required: true },
   long: { type: String, required: true },
+  lotes: { type: Number },
 });
 
 export default mongoose.model("Mark", MarkSchema);

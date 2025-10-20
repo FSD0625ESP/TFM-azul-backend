@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import usuarioRoutes from "./routes/usuarioRoutes.js";
 import shopRoutes from "./routes/shopRoutes.js";
 import createMarkRoutes from "./routes/createMark.js";
+import marksRoutes from "./routes/showMarks.js";
 
 dotenv.config();
 const app = express();
@@ -25,6 +26,8 @@ app.use("/api/shops", shopRoutes);
 
 // Nueva ruta para registrar Shop y Mark
 app.use("/api/createMark", createMarkRoutes);
+
+app.use("/api/marks", marksRoutes);
 
 // Ruta básica
 app.get("/", (req, res) => {

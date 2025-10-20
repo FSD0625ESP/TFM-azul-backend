@@ -1,10 +1,9 @@
 import Mark from "../models/Mark.js";
-import User from "../models/User.js";
 
 export const registerMark = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { shopName, shopType, streetAddress, lat, long } = req.body;
+    const { shopType, lat, long } = req.body;
 
     if (!lat || !long || !shopType || !userId) {
       return res.status(400).json({ message: "Missing required data" });
