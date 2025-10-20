@@ -1,11 +1,14 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import Shop from "../models/Shop.js";
+import Raider from "../models/Raider.js";
 import bcrypt from "bcryptjs";
 
 // Register User
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password, photo, phone, user_type } = req.body;
+    const { name, email, password, photo, phone, user_type, shopData } =
+      req.body;
 
     if (!name || !email || !password) {
       return res
@@ -31,9 +34,38 @@ export const registerUser = async (req, res) => {
 
     await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully" });
+    // Si es una tienda, crear el registro de Shop
+    if (user_type === "shop" && shopData) {
+      const newShop = new Shop({
+        user: newUser._id,
+        name: shopData.shopName,
+        address: shopData.streetAddress,
+        category: shopData.shopType,
+        menus: "",
+      });
+      await newShop.save();
+    }
+
+    // Si es un rider, crear el registro de Raider
+    if (user_type === "rider") {
+      const newRaider = new Raider({
+        user: newUser._id,
+        estado: "available",
+      });
+      await newRaider.save();
+    }
+
+    res.status(201).json({
+      message: "User registered successfully",
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        user_type: newUser.user_type,
+      },
+    });
   } catch (error) {
-    console.error("❌ Error registering user:", error);
+    console.error("Error registering user:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -81,7 +113,7 @@ export const loginUser = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Login error:", error);
+    console.error("Login error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

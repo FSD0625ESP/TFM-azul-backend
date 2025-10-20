@@ -25,8 +25,9 @@ const UserSchema = new mongoose.Schema({
     type: Number,
   },
   user_type: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "UserType",
+    type: String,
+    enum: ["rider", "shop"],
+    default: "rider",
   },
 });
 

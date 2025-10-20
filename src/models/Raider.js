@@ -1,8 +1,9 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const RaiderSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  state: Boolean,
+  estado: { type: String, default: "available" },
 });
 
-module.exports = mongoose.model("Raider", RaiderSchema);
+const Raider = mongoose.model("Raider", RaiderSchema);
+export default Raider;

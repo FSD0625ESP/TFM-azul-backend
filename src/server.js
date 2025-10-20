@@ -15,15 +15,15 @@ app.use(express.json());
 // Conexión a MongoDB
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => console.log("✅ Conectado a MongoDB"))
-  .catch((err) => console.error("❌ Error conectando a MongoDB:", err));
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("Error connecting to MongoDB:", err));
 
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/shops", shopRoutes);
 
 // Rutas básicas
 app.get("/", (req, res) => {
-  res.json({ message: "API funcionando correctamente 🚀" });
+  res.json({ message: "API working correctly" });
 });
 
 // Puerto

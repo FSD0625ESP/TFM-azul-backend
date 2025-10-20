@@ -28,7 +28,7 @@ export const registerShop = async (req, res) => {
       shop: newShop,
     });
   } catch (error) {
-    console.error("❌ Error registrando tienda:", error);
+    console.error("Error registrando tienda:", error);
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
