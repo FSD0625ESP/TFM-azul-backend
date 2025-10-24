@@ -100,17 +100,42 @@ export const loginUser = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
     );
 
+    const userResponse = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      photo: user.photo,
+      phone: user.phone,
+      user_type: user.user_type,
+    };
+
+    // Si es shop, buscar el Shop ID
+    if (user.user_type === "shop") {
+      console.log("Buscando shop para user:", user._id);
+      let shop = await Shop.findOne({ user: user._id });
+
+      if (!shop) {
+        console.log("Shop no existe, creando una por defecto...");
+        // Crear una shop por defecto si no existe
+        shop = new Shop({
+          user: user._id,
+          name: "Mi Tienda",
+          address: "Dirección no especificada",
+          category: "General",
+        });
+        await shop.save();
+        console.log("Shop creada por defecto:", shop._id);
+      } else {
+        console.log("Shop encontrada:", shop._id);
+      }
+
+      userResponse.shopId = shop._id;
+    }
+
     res.status(200).json({
       message: "Login successful",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        photo: user.photo,
-        phone: user.phone,
-        user_type: user.user_type,
-      },
+      user: userResponse,
     });
   } catch (error) {
     console.error("Login error:", error);

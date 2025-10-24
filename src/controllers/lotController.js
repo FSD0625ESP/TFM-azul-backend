@@ -28,3 +28,25 @@ export const getLots = async (req, res) => {
     res.status(500).json({ message: "Error al obtener los lotes" });
   }
 };
+
+// Eliminar un lote
+export const deleteLot = async (req, res) => {
+  try {
+    const { lotId } = req.params;
+
+    if (!lotId) {
+      return res.status(400).json({ message: "Falta el ID del lote" });
+    }
+
+    const deletedLot = await Lot.findByIdAndDelete(lotId);
+
+    if (!deletedLot) {
+      return res.status(404).json({ message: "Lote no encontrado" });
+    }
+
+    res.json({ message: "Lote eliminado correctamente", lot: deletedLot });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error eliminando el lote" });
+  }
+};
