@@ -24,11 +24,6 @@ const UserSchema = new mongoose.Schema({
   phone: {
     type: Number,
   },
-  user_type: {
-    type: String,
-    enum: ["rider", "shop"],
-    default: "rider",
-  },
 });
 
 const User = mongoose.model("User", UserSchema);

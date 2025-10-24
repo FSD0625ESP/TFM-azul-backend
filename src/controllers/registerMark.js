@@ -19,7 +19,7 @@ export const registerMark = async (req, res) => {
       return res.status(400).json({ message: "Missing required data" });
     }
 
-    // Crear el Mark
+    // Aqui se crea el Mark
     const newMark = await Mark.create({
       state: true,
       user: userId,
@@ -30,7 +30,7 @@ export const registerMark = async (req, res) => {
 
     console.log("Mark creado:", newMark._id);
 
-    // Crear la Shop también
+    // Aqui se crea la Shop
     if (shopName && streetAddress) {
       const newShop = new Shop({
         user: userId,

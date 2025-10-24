@@ -3,20 +3,32 @@ import Lot from "../models/Lot.js";
 // ➕ Crear un nuevo lote individual (plato)
 export const createLot = async (req, res) => {
   try {
-    const { shopId, name, description } = req.body;
+    const { shopId, name, description, pickupDeadline } = req.body;
 
-    if (!shopId || !name) {
-      return res
-        .status(400)
-        .json({ message: "Faltan campos requeridos (shopId y name)" });
+    // Validación de campos obligatorios
+    if (!shopId || !name || !pickupDeadline) {
+      return res.status(400).json({
+        message: "Faltan campos requeridos (shopId, name y pickupDeadline)",
+      });
     }
 
+    // Validar que pickupDeadline sea una fecha válida
+    const deadlineDate = new Date(pickupDeadline);
+    if (isNaN(deadlineDate.getTime())) {
+      return res.status(400).json({
+        message: "El campo pickupDeadline debe ser una fecha válida",
+      });
+    }
+
+    // Crear el nuevo lote
     const newLot = new Lot({
       shop: shopId,
       name,
       description,
+      pickupDeadline: deadlineDate,
     });
 
+    // Guardar en la base de datos
     await newLot.save();
 
     res.status(201).json({ message: "Lote creado correctamente", lot: newLot });
@@ -36,7 +48,7 @@ export const getLots = async (req, res) => {
   }
 };
 
-// Eliminar un lote
+// ❌ Eliminar un lote
 export const deleteLot = async (req, res) => {
   try {
     const { lotId } = req.params;
