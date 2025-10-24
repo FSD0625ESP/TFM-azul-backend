@@ -1,15 +1,22 @@
 import Lot from "../models/Lot.js";
 
-// ➕ Crear un nuevo lote asociado a una tienda
+// ➕ Crear un nuevo lote individual (plato)
 export const createLot = async (req, res) => {
   try {
-    const { shopId, lot } = req.body;
+    const { shopId, name, description } = req.body;
 
-    if (!shopId || !lot) {
-      return res.status(400).json({ message: "Faltan campos requeridos" });
+    if (!shopId || !name) {
+      return res
+        .status(400)
+        .json({ message: "Faltan campos requeridos (shopId y name)" });
     }
 
-    const newLot = new Lot({ shop: shopId, lot });
+    const newLot = new Lot({
+      shop: shopId,
+      name,
+      description,
+    });
+
     await newLot.save();
 
     res.status(201).json({ message: "Lote creado correctamente", lot: newLot });

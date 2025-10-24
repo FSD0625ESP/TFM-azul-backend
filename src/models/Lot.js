@@ -1,9 +1,24 @@
+// models/Lot.js
 import mongoose from "mongoose";
 
-const LotSchema = new mongoose.Schema({
-  state: { type: Boolean, default: true },
-  shop: { type: mongoose.Schema.Types.ObjectId, ref: "Shop", required: true },
-  lot: { type: Number, required: true }, // cantidad de lotes
+const lotSchema = new mongoose.Schema({
+  shop: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Shop",
+    required: true,
+  },
+  name: {
+    type: String,
+    required: true, // Ej: “Primer plato”, “Segundo plato”, “Postre”
+  },
+  description: {
+    type: String,
+    required: false, // Detalle opcional del plato
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-export default mongoose.model("Lot", LotSchema);
+export default mongoose.model("Lot", lotSchema);
