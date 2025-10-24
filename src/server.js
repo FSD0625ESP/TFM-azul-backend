@@ -6,6 +6,7 @@ import usuarioRoutes from "./routes/usuarioRoutes.js";
 import shopRoutes from "./routes/shopRoutes.js";
 import createMarkRoutes from "./routes/createMark.js";
 import marksRoutes from "./routes/showMarks.js";
+import lotRoutes from "./routes/lotRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -28,6 +29,8 @@ app.use("/api/shops", shopRoutes);
 app.use("/api/createMark", createMarkRoutes);
 
 app.use("/api/marks", marksRoutes);
+
+app.use("/api/lots", lotRoutes);
 
 // Ruta básica
 app.get("/", (req, res) => {
