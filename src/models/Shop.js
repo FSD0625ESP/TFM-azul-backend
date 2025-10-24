@@ -1,14 +1,14 @@
 import mongoose from "mongoose";
 
-const ShopSchema = new mongoose.Schema({
+const StoreSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, "Name is required"],
     trim: true,
   },
-  adress: {
+  address: {
     type: String,
-    required: [true, "Email is required"],
+    required: [true, "Address is required"],
     unique: true,
   },
   type: {
@@ -37,5 +37,5 @@ const ShopSchema = new mongoose.Schema({
   },
 });
 
-const Shop = mongoose.model("Shop", ShopSchema);
-export default Shop;
+const Store = mongoose.model("Store", StoreSchema);
+export default Store;

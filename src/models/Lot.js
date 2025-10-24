@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 const lotSchema = new mongoose.Schema({
   shop: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Shop",
+    ref: "Store",
     required: true, // Relación con la tienda que creó el lote
   },
   name: {

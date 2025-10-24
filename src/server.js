@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import usuarioRoutes from "./routes/usuarioRoutes.js";
-import shopRoutes from "./routes/shopRoutes.js";
+import storeRoutes from "./routes/storeRoutes.js";
 import createMarkRoutes from "./routes/createMark.js";
 import marksRoutes from "./routes/showMarks.js";
 import lotRoutes from "./routes/lotRoutes.js";
@@ -22,8 +22,8 @@ mongoose
   .catch((err) => console.error("Error connecting to MongoDB:", err));
 
 // Rutas existentes
-app.use("/api/usuarios", usuarioRoutes);
-app.use("/api/shops", shopRoutes);
+app.use("/api/users", usuarioRoutes);
+app.use("/api/stores", storeRoutes);
 
 // Nueva ruta para registrar Shop y Mark
 app.use("/api/createMark", createMarkRoutes);

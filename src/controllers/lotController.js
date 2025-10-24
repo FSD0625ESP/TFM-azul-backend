@@ -12,11 +12,29 @@ export const createLot = async (req, res) => {
       });
     }
 
-    // Validar que pickupDeadline sea una fecha válida
-    const deadlineDate = new Date(pickupDeadline);
+    // Si pickupDeadline es solo hora (formato HH:mm), combinarla con hoy
+    let deadlineDate;
+    if (pickupDeadline.match(/^\d{2}:\d{2}$/)) {
+      // Formato hora: "20:21"
+      const today = new Date();
+      const [hours, minutes] = pickupDeadline.split(":");
+      deadlineDate = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate(),
+        parseInt(hours),
+        parseInt(minutes),
+        0
+      );
+    } else {
+      // Formato datetime completo
+      deadlineDate = new Date(pickupDeadline);
+    }
+
     if (isNaN(deadlineDate.getTime())) {
       return res.status(400).json({
-        message: "El campo pickupDeadline debe ser una fecha válida",
+        message:
+          "El campo pickupDeadline debe ser una hora válida (HH:mm) o fecha completa",
       });
     }
 
@@ -67,5 +85,68 @@ export const deleteLot = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Error eliminando el lote" });
+  }
+};
+
+// ✏️ Actualizar un lote
+export const updateLot = async (req, res) => {
+  try {
+    const { lotId } = req.params;
+    const { name, description, pickupDeadline } = req.body;
+
+    if (!lotId) {
+      return res.status(400).json({ message: "Falta el ID del lote" });
+    }
+
+    if (!name || !pickupDeadline) {
+      return res.status(400).json({
+        message: "Faltan campos requeridos (name y pickupDeadline)",
+      });
+    }
+
+    // Procesar pickupDeadline igual que en createLot
+    let deadlineDate;
+    if (pickupDeadline.match(/^\d{2}:\d{2}$/)) {
+      // Formato hora: "20:21"
+      const today = new Date();
+      const [hours, minutes] = pickupDeadline.split(":");
+      deadlineDate = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate(),
+        parseInt(hours),
+        parseInt(minutes),
+        0
+      );
+    } else {
+      // Formato datetime completo
+      deadlineDate = new Date(pickupDeadline);
+    }
+
+    if (isNaN(deadlineDate.getTime())) {
+      return res.status(400).json({
+        message:
+          "El campo pickupDeadline debe ser una hora válida (HH:mm) o fecha completa",
+      });
+    }
+
+    const updatedLot = await Lot.findByIdAndUpdate(
+      lotId,
+      {
+        name,
+        description,
+        pickupDeadline: deadlineDate,
+      },
+      { new: true }
+    );
+
+    if (!updatedLot) {
+      return res.status(404).json({ message: "Lote no encontrado" });
+    }
+
+    res.json({ message: "Lote actualizado correctamente", lot: updatedLot });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error actualizando el lote" });
   }
 };
