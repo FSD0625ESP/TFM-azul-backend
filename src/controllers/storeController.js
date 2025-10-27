@@ -1,12 +1,14 @@
 import Store from "../models/Shop.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { createMark } from "./markController.js";
 
 // Registrar Tienda
 export const registerStore = async (req, res) => {
   try {
     // Acepta 'address' y 'type' para el registro
-    const { name, address, type, email, password, photo, phone } = req.body;
+    const { name, address, type, email, password, photo, phone, coordinates } =
+      req.body;
 
     // Valida campos obligatorios según el esquema
     if (!name || !address || !type || !email || !password) {
@@ -30,6 +32,15 @@ export const registerStore = async (req, res) => {
     });
 
     await newStore.save();
+
+    // Crear la marca para la tienda
+    if (coordinates && coordinates.lat && coordinates.lng) {
+      await createMark(
+        newStore._id,
+        coordinates.lat.toString(),
+        coordinates.lng.toString()
+      );
+    }
 
     res
       .status(201)
