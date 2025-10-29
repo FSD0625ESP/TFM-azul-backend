@@ -7,6 +7,14 @@ const lotSchema = new mongoose.Schema({
     ref: "Store",
     required: true, // Relación con la tienda que creó el lote
   },
+  rider: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
+  reserved: {
+    type: Boolean,
+    default: false, // Estado del lote (activo/inactivo)
+  },
   name: {
     type: String,
     required: true, // Ej: "Primer plato", "Segundo plato", "Postre"
