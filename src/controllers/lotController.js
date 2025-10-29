@@ -150,3 +150,36 @@ export const updateLot = async (req, res) => {
     res.status(500).json({ message: "Error actualizando el lote" });
   }
 };
+
+// ✅ Reservar un lote (protegido): establecer reserved=true y asignar rider desde JWT
+export const reserveLot = async (req, res) => {
+  try {
+    const { lotId } = req.params;
+
+    if (!lotId) {
+      return res.status(400).json({ message: "Falta el ID del lote" });
+    }
+
+    const riderId = req.user && (req.user.id || req.user._id);
+    if (!riderId) {
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
+
+    const lot = await Lot.findById(lotId);
+    if (!lot) return res.status(404).json({ message: "Lote no encontrado" });
+
+    if (lot.reserved) {
+      return res.status(409).json({ message: "Lote ya reservado" });
+    }
+
+    lot.reserved = true;
+    lot.rider = riderId;
+
+    await lot.save();
+
+    res.json({ message: "Lote reservado", lot });
+  } catch (err) {
+    console.error("Error reservando lote:", err);
+    res.status(500).json({ message: "Error reservando lote" });
+  }
+};
