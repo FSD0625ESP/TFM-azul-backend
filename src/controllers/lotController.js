@@ -15,7 +15,7 @@ export const createLot = async (req, res) => {
     // Si pickupDeadline es solo hora (formato HH:mm), combinarla con hoy
     let deadlineDate;
     if (pickupDeadline.match(/^\d{2}:\d{2}$/)) {
-      // Formato hora: "20:21"
+      // Ejemplo de Formato valido : "20:21"
       const today = new Date();
       const [hours, minutes] = pickupDeadline.split(":");
       deadlineDate = new Date(
@@ -31,6 +31,7 @@ export const createLot = async (req, res) => {
       deadlineDate = new Date(pickupDeadline);
     }
 
+    //Si la fecha no es válida
     if (isNaN(deadlineDate.getTime())) {
       return res.status(400).json({
         message:
@@ -104,10 +105,9 @@ export const updateLot = async (req, res) => {
       });
     }
 
-    // Procesar pickupDeadline igual que en createLot
+    // Procesar pickupDeadline igual que en createLot para veridificar formato
     let deadlineDate;
     if (pickupDeadline.match(/^\d{2}:\d{2}$/)) {
-      // Formato hora: "20:21"
       const today = new Date();
       const [hours, minutes] = pickupDeadline.split(":");
       deadlineDate = new Date(
