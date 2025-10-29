@@ -4,7 +4,9 @@ import Shop from "../models/Shop.js";
 export const registerMark = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { shopType, lat, long, shopName, streetAddress } = req.body;
+    // Accept optional type_mark so this endpoint can create both shop and homeless marks
+    const { shopType, lat, long, shopName, streetAddress, type_mark } =
+      req.body;
 
     console.log("registerMark - userId:", userId);
     console.log("registerMark - body:", {
@@ -13,25 +15,37 @@ export const registerMark = async (req, res) => {
       long,
       shopName,
       streetAddress,
+      type_mark,
     });
 
-    if (!lat || !long || !shopType || !userId) {
-      return res.status(400).json({ message: "Missing required data" });
+    if (!lat || !long || !userId) {
+      return res
+        .status(400)
+        .json({ message: "Missing required data (lat,long,userId)" });
     }
 
-    // Aqui se crea el Mark
+    const markType = type_mark || (shopType ? "shop" : "homeless");
+
+    // If creating a shop mark, ensure shopType is provided
+    if (markType === "shop" && !shopType) {
+      return res
+        .status(400)
+        .json({ message: "Missing required data for shop (shopType)" });
+    }
+
+    // Create the Mark
     const newMark = await Mark.create({
       state: true,
       user: userId,
-      type_mark: "shop",
+      type_mark: markType,
       lat,
       long,
     });
 
     console.log("Mark creado:", newMark._id);
 
-    // Aqui se crea la Shop
-    if (shopName && streetAddress) {
+    // If this is a shop and we have shopName+streetAddress, create the Shop record
+    if (markType === "shop" && shopName && streetAddress) {
       const newShop = new Shop({
         user: userId,
         name: shopName,
@@ -40,8 +54,10 @@ export const registerMark = async (req, res) => {
       });
       await newShop.save();
       console.log("Shop creada:", newShop._id);
-    } else {
-      console.warn("No se creó Shop - faltan shopName o streetAddress");
+    } else if (markType === "shop") {
+      console.warn(
+        "Shop mark created but missing shopName or streetAddress; shop not created"
+      );
     }
 
     return res.status(201).json({ mark: newMark });
