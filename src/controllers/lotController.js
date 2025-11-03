@@ -177,9 +177,36 @@ export const reserveLot = async (req, res) => {
 
     await lot.save();
 
+    // Importar User para agregar la reserva al rider
+    const User = (await import("../models/User.js")).default;
+    await User.findByIdAndUpdate(
+      riderId,
+      { $push: { reservedLots: lotId } },
+      { new: true }
+    );
+
     res.json({ message: "Lote reservado", lot });
   } catch (err) {
     console.error("Error reservando lote:", err);
     res.status(500).json({ message: "Error reservando lote" });
+  }
+};
+
+// 🎫 Obtener lotes reservados del rider autenticado
+export const getMyReservedLots = async (req, res) => {
+  try {
+    const riderId = req.user && (req.user.id || req.user._id);
+    if (!riderId) {
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
+
+    const lots = await Lot.find({ rider: riderId, reserved: true })
+      .populate("shop", "name address category phone")
+      .sort({ createdAt: -1 });
+
+    res.json(lots);
+  } catch (err) {
+    console.error("Error obteniendo reservas:", err);
+    res.status(500).json({ message: "Error obteniendo reservas" });
   }
 };

@@ -24,6 +24,12 @@ const UserSchema = new mongoose.Schema({
   phone: {
     type: Number,
   },
+  reservedLots: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Lot",
+    },
+  ],
 });
 
 const User = mongoose.model("User", UserSchema);
