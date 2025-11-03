@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Shop from "../models/Shop.js";
-import Raider from "../models/Raider.js";
 import bcrypt from "bcryptjs";
 
 // Registro de usuario
