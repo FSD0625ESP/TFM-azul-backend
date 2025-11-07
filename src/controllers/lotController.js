@@ -12,7 +12,7 @@ export const createLot = async (req, res) => {
       });
     }
 
-    // Si pickupDeadline es solo hora (formato HH:mm), combinarla con hoy
+    // Si pickupDeadline solo hora (formato HH:mm), combinarla con hoy
     let deadlineDate;
     if (pickupDeadline.match(/^\d{2}:\d{2}$/)) {
       // Ejemplo de Formato valido : "20:21"
@@ -76,15 +76,28 @@ export const deleteLot = async (req, res) => {
       return res.status(400).json({ message: "Falta el ID del lote" });
     }
 
-    const deletedLot = await Lot.findByIdAndDelete(lotId);
-
-    if (!deletedLot) {
+    // Buscar el lote antes de eliminarlo para obtener su rider
+    const lot = await Lot.findById(lotId);
+    if (!lot) {
       return res.status(404).json({ message: "Lote no encontrado" });
     }
 
+    // Si el lote tenía un rider asignado, quitarlo de su lista de reservas
+    if (lot.rider) {
+      const User = (await import("../models/User.js")).default;
+      await User.findByIdAndUpdate(
+        lot.rider,
+        { $pull: { reservedLots: lotId } }, // ← elimina el lote del array reservedLots
+        { new: true }
+      );
+    }
+
+    // Ahora sí eliminar el lote
+    const deletedLot = await Lot.findByIdAndDelete(lotId);
+
     res.json({ message: "Lote eliminado correctamente", lot: deletedLot });
   } catch (err) {
-    console.error(err);
+    console.error("Error eliminando el lote:", err);
     res.status(500).json({ message: "Error eliminando el lote" });
   }
 };

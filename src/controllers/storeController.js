@@ -10,7 +10,7 @@ export const registerStore = async (req, res) => {
     const { name, address, type, email, password, photo, phone, coordinates } =
       req.body;
 
-    // Valida campos obligatorios según el esquema
+    // Valida campos obligatorios según el esquema mongoose
     if (!name || !address || !type || !email || !password) {
       return res.status(400).json({
         message:
@@ -33,7 +33,7 @@ export const registerStore = async (req, res) => {
 
     await newStore.save();
 
-    // Crear la marca para la tienda
+    // Crear la marca para la tienda ya que se recojen las coordenadas en el registro
     if (coordinates && coordinates.lat && coordinates.lng) {
       await createMark(
         newStore._id,
@@ -47,7 +47,7 @@ export const registerStore = async (req, res) => {
       .json({ message: "Store registered successfully", store: newStore });
   } catch (error) {
     console.error("Error registering store:", error);
-    // Manejo de error de clave duplicada para campos únicos (11000)
+    // Manejo de error de clave duplicada
     if (error && error.code === 11000) {
       const dupField = Object.keys(error.keyValue || {}).join(", ");
       return res.status(400).json({
@@ -70,7 +70,7 @@ export const getAllStores = async (req, res) => {
   }
 };
 
-// Obtiene tienda por ID (la ruta actual usa /user/:userId, mantenemos el parámetro
+// Obtiene tienda por ID
 // pero buscamos por _id ya que el modelo no incluye un campo 'user')
 export const getStoreByUserId = async (req, res) => {
   try {
@@ -117,7 +117,7 @@ export const loginStore = async (req, res) => {
       return res.status(404).json({ message: "Store not found" });
     }
 
-    // Comparamos la contraseña enviada con la guardada (encriptada)
+    // Comparamos la contraseña enviada con la (encriptada)
     const isPasswordValid = await bcrypt.compare(password, store.password);
 
     // Si la contraseña no es valida, devolvemos error 401
@@ -129,10 +129,10 @@ export const loginStore = async (req, res) => {
     const token = jwt.sign(
       { id: store._id, email: store.email },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" } // Por defecto, expira en 1 dia
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" } // expira en 1 dia
     );
 
-    // Preparamos los datos que enviaremos como respuesta (sin contraseña)
+    // Preparamos los datos que enviaremos como respuesta (sin password)
     const storeResponse = {
       id: store._id,
       name: store.name,

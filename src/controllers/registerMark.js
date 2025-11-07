@@ -4,7 +4,7 @@ import Shop from "../models/Shop.js";
 export const registerMark = async (req, res) => {
   try {
     const { userId } = req.params;
-    // Accept optional type_mark so this endpoint can create both shop and homeless marks
+    // Acepta type_mark opcional para que este endpoint pueda crear tanto marcas de tiendas como de personas sin hogar
     const { shopType, lat, long, shopName, streetAddress, type_mark } =
       req.body;
 
@@ -21,19 +21,19 @@ export const registerMark = async (req, res) => {
     if (!lat || !long || !userId) {
       return res
         .status(400)
-        .json({ message: "Missing required data (lat,long,userId)" });
+        .json({ message: "Faltan datos requeridos (lat, long, userId)" });
     }
 
     const markType = type_mark || (shopType ? "shop" : "homeless");
 
-    // If creating a shop mark, ensure shopType is provided
+    // Si se crea una marca de tienda, asegurarse de que shopType esté presente
     if (markType === "shop" && !shopType) {
       return res
         .status(400)
-        .json({ message: "Missing required data for shop (shopType)" });
+        .json({ message: "Faltan datos requeridos para la tienda (shopType)" });
     }
 
-    // Create the Mark
+    // Crear la marca
     const newMark = await Mark.create({
       state: true,
       user: userId,
@@ -42,9 +42,9 @@ export const registerMark = async (req, res) => {
       long,
     });
 
-    console.log("Mark creado:", newMark._id);
+    console.log("Marca creada:", newMark._id);
 
-    // If this is a shop and we have shopName+streetAddress, create the Shop record
+    // Si es una tienda y se proporcionan shopName + streetAddress, crear el registro de la tienda
     if (markType === "shop" && shopName && streetAddress) {
       const newShop = new Shop({
         user: userId,
@@ -53,16 +53,18 @@ export const registerMark = async (req, res) => {
         category: shopType,
       });
       await newShop.save();
-      console.log("Shop creada:", newShop._id);
+      console.log("Tienda creada:", newShop._id);
     } else if (markType === "shop") {
       console.warn(
-        "Shop mark created but missing shopName or streetAddress; shop not created"
+        "Se creó una marca de tienda pero faltan shopName o streetAddress; no se creó la tienda"
       );
     }
 
     return res.status(201).json({ mark: newMark });
   } catch (err) {
     console.error("Error en registerMark:", err);
-    return res.status(500).json({ message: "Server error creating mark" });
+    return res
+      .status(500)
+      .json({ message: "Error del servidor al crear la marca" });
   }
 };
