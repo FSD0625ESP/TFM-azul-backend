@@ -7,6 +7,7 @@ import storeRoutes from "./routes/storeRoutes.js";
 import createMarkRoutes from "./routes/createMark.js";
 import marksRoutes from "./routes/showMarks.js";
 import lotRoutes from "./routes/lotRoutes.js";
+import "./lotExpireTime/lotCleanup.js";
 
 dotenv.config();
 const app = express();
