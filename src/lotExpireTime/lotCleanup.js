@@ -2,13 +2,14 @@ import cron from "node-cron";
 import Lot from "../models/Lot.js";
 
 // Ejecutar cada minuto
-cron.schedule("* * * * *", async () => {
+cron.schedule("*/3 * * * *", async () => {
   try {
     const now = new Date();
 
-    // Eliminar lotes cuyo pickupDeadline ya pasó
+    // Eliminar solo lotes no reservados y expirados
     const result = await Lot.deleteMany({
       pickupDeadline: { $lt: now },
+      reserved: false,
     });
 
     if (result.deletedCount > 0) {
