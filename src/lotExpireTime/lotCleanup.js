@@ -1,8 +1,8 @@
 import cron from "node-cron";
 import Lot from "../models/Lot.js";
 
-// Ejecutar cada minuto
-cron.schedule("*/3 * * * *", async () => {
+// Ejecutar cada 3 minutos
+cron.schedule("*/1 * * * *", async () => {
   try {
     const now = new Date();
 
