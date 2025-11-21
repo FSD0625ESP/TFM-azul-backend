@@ -60,10 +60,29 @@ export const createLot = async (req, res) => {
 // 📦 Obtener todos los lotes
 export const getLots = async (req, res) => {
   try {
-    const lots = await Lot.find()
+    const allLots = await Lot.find()
       .populate("shop", "name address category phone")
       .populate("rider", "name email phone");
-    res.json(lots);
+
+    const now = new Date();
+
+    // Filtrar lotes según su estado de caducidad
+    const activeLots = allLots.filter((lot) => {
+      const pickupDeadline = new Date(lot.pickupDeadline);
+
+      if (lot.reserved) {
+        // Si está reservado, permitir 10 minutos extra después de la hora
+        const extendedDeadline = new Date(
+          pickupDeadline.getTime() + 10 * 60 * 1000
+        );
+        return now <= extendedDeadline;
+      } else {
+        // Si no está reservado, caducar en la hora exacta
+        return now <= pickupDeadline;
+      }
+    });
+
+    res.json(activeLots);
   } catch (err) {
     res.status(500).json({ message: "Error al obtener los lotes" });
   }
