@@ -207,6 +207,56 @@ export const reserveLot = async (req, res) => {
   }
 };
 
+// 🔄 Desreservar un lote (quitar reserva)
+export const unreserveLot = async (req, res) => {
+  try {
+    const { lotId } = req.params;
+
+    if (!lotId) {
+      return res.status(400).json({ message: "Falta el ID del lote" });
+    }
+
+    const riderId = req.user && (req.user.id || req.user._id);
+    if (!riderId) {
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
+
+    const lot = await Lot.findById(lotId);
+    if (!lot) return res.status(404).json({ message: "Lote no encontrado" });
+
+    // Verificar que el lote está reservado por este rider
+    if (!lot.reserved) {
+      return res.status(400).json({ message: "Lote no está reservado" });
+    }
+
+    const lotRiderId = String(lot.rider) === String(riderId);
+    if (!lotRiderId) {
+      return res
+        .status(403)
+        .json({ message: "Este lote no está reservado por ti" });
+    }
+
+    // Desreservar el lote
+    lot.reserved = false;
+    lot.rider = null;
+
+    await lot.save();
+
+    // Importar User para quitar la reserva del rider
+    const User = (await import("../models/User.js")).default;
+    await User.findByIdAndUpdate(
+      riderId,
+      { $pull: { reservedLots: lotId } },
+      { new: true }
+    );
+
+    res.json({ message: "Lote desreservado correctamente", lot });
+  } catch (err) {
+    console.error("Error desreservando lote:", err);
+    res.status(500).json({ message: "Error desreservando lote" });
+  }
+};
+
 // 🎫 Obtener lotes reservados del rider autenticado
 export const getMyReservedLots = async (req, res) => {
   try {
