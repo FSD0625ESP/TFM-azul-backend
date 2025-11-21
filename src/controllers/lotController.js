@@ -60,7 +60,9 @@ export const createLot = async (req, res) => {
 // 📦 Obtener todos los lotes
 export const getLots = async (req, res) => {
   try {
-    const lots = await Lot.find().populate("shop", "name address category");
+    const lots = await Lot.find()
+      .populate("shop", "name address category phone")
+      .populate("rider", "name email phone");
     res.json(lots);
   } catch (err) {
     res.status(500).json({ message: "Error al obtener los lotes" });
