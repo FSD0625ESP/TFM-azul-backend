@@ -9,7 +9,6 @@ cron.schedule("*/1 * * * *", async () => {
     // Eliminar solo lotes no reservados y expirados
     const result = await Lot.deleteMany({
       pickupDeadline: { $lt: now },
-      reserved: false,
     });
 
     if (result.deletedCount > 0) {

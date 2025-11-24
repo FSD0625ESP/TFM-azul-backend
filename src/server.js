@@ -89,6 +89,7 @@ wss.on("connection", (ws) => {
     if (data.type === "message") {
       broadcast(orderId, {
         type: "message",
+        orderId,
         from: userType,
         fromId: userId,
         content: data.content,
