@@ -10,7 +10,7 @@ export async function notifyUser(userId, payload) {
     await _sender(userId, payload);
     return true;
   } catch (e) {
-    console.error('notifyUser error', e);
+    console.error("notifyUser error", e);
     return false;
   }
 }
