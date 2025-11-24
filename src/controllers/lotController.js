@@ -269,6 +269,22 @@ export const unreserveLot = async (req, res) => {
       { new: true }
     );
 
+    // Notificar a la tienda (shop) que el rider canceló la reserva
+    try {
+      const { notifyUser } = await import("../utils/notify.js");
+      const shopId = lot.shop?._id || lot.shop;
+      if (shopId) {
+        notifyUser(String(shopId), {
+          type: "reservation_cancelled",
+          orderId: lotId,
+          riderId,
+          message: "El rider ha cancelado la reserva",
+        });
+      }
+    } catch (e) {
+      console.error("Error sending cancel notification:", e);
+    }
+
     res.json({ message: "Lote desreservado correctamente", lot });
   } catch (err) {
     console.error("Error desreservando lote:", err);

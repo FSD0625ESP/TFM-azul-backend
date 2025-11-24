@@ -9,6 +9,10 @@ import createMarkRoutes from "./routes/createMark.js";
 import marksRoutes from "./routes/showMarks.js";
 import lotRoutes from "./routes/lotRoutes.js";
 import "./lotExpireTime/lotCleanup.js";
+import Message from "./models/Message.js";
+import Lot from "./models/Lot.js";
+import messagesRoutes from "./routes/messages.js";
+import { setSender } from "./utils/notify.js";
 
 // 🔥 Necesario para WebSockets
 import http from "http";
@@ -33,6 +37,7 @@ app.use("/api/stores", storeRoutes);
 app.use("/api/createMark", createMarkRoutes);
 app.use("/api/marks", marksRoutes);
 app.use("/api/lots", lotRoutes);
+app.use("/api/messages", messagesRoutes);
 
 // Ruta básica
 app.get("/", (req, res) => {
@@ -53,7 +58,18 @@ const wss = new WebSocketServer({ server });
 
 // Estructura: rooms = { orderId: Set<WebSockets> }
 const rooms = new Map();
+// Mapa userId => Set<WebSocket> para notificar users conectados aunque no
+// tengan el chat abierto
+const userSockets = new Map();
 
+// Register sender so other modules can notify users by userId
+setSender(async (targetUserId, payload) => {
+  if (!targetUserId) return;
+  const sockets = userSockets.get(String(targetUserId)) || new Set();
+  sockets.forEach((s) => {
+    if (s.readyState === 1) s.send(JSON.stringify(payload));
+  });
+});
 wss.on("connection", (ws) => {
   console.log("WS client connected");
 
@@ -61,7 +77,7 @@ wss.on("connection", (ws) => {
   let userType = null; // "rider" o "store"
   let userId = null;
 
-  ws.on("message", (raw) => {
+  ws.on("message", async (raw) => {
     const data = JSON.parse(raw);
 
     // ---------------------------------------------
@@ -76,10 +92,26 @@ wss.on("connection", (ws) => {
         rooms.set(orderId, new Set());
       }
 
-      rooms.get(orderId).add(ws);
+      const room = rooms.get(orderId);
+      const alreadyInRoom = room.has(ws);
+      room.add(ws);
 
-      console.log(`🔵 ${userType} (${userId}) joined order ${orderId}`);
+      if (!alreadyInRoom) {
+        console.log(
+          `🔵 ${userType} (${userId || "unknown"}) joined order ${orderId}`
+        );
+      }
 
+      return;
+    }
+
+    // Identificar socket con userId (para notificaciones globales)
+    if (data.type === "identify") {
+      userId = data.userId;
+      userType = data.userType;
+      if (!userSockets.has(userId)) userSockets.set(userId, new Set());
+      userSockets.get(userId).add(ws);
+      console.log(`🆔 Identified socket for user ${userId}`);
       return;
     }
 
@@ -87,14 +119,49 @@ wss.on("connection", (ws) => {
     // 🟩 MENSAJE PRIVADO ENTRE RIDER Y STORE
     // ---------------------------------------------
     if (data.type === "message") {
-      broadcast(orderId, {
-        type: "message",
-        orderId,
-        from: userType,
-        fromId: userId,
-        content: data.content,
-        timestamp: new Date().toISOString(),
-      });
+      try {
+        // Persist message
+        const saved = await Message.create({
+          orderId: data.orderId,
+          fromId: data.userId || userId,
+          fromType: data.userType || userType,
+          content: data.content,
+          read: false,
+        });
+
+        const messagePayload = {
+          type: "message",
+          orderId: data.orderId,
+          from: data.userType || userType,
+          fromId: data.userId || userId,
+          content: data.content,
+          timestamp: saved.timestamp || new Date().toISOString(),
+        };
+
+        // Broadcast to room participants (if any)
+        broadcast(data.orderId, messagePayload);
+
+        // Notify other connected sockets for the other participant
+        // Resolve order participants from Lot model
+        const lot = await Lot.findById(data.orderId).lean();
+        let recipientId = null;
+        if (lot) {
+          const shopId = lot.shop?._id || lot.shop;
+          const riderId = lot.rider;
+          // If sender is rider, recipient is shop; if sender is store, recipient is rider
+          if ((data.userType || userType) === "rider")
+            recipientId = String(shopId);
+          else recipientId = String(riderId);
+        }
+
+        if (recipientId && userSockets.has(recipientId)) {
+          userSockets.get(recipientId).forEach((s) => {
+            if (s.readyState === 1) s.send(JSON.stringify(messagePayload));
+          });
+        }
+      } catch (err) {
+        console.error("Error saving or broadcasting message:", err);
+      }
     }
   });
 
@@ -108,6 +175,12 @@ wss.on("connection", (ws) => {
       if (rooms.get(orderId).size === 0) {
         rooms.delete(orderId);
       }
+    }
+
+    // Remove from userSockets if identified
+    if (userId && userSockets.has(userId)) {
+      userSockets.get(userId).delete(ws);
+      if (userSockets.get(userId).size === 0) userSockets.delete(userId);
     }
 
     console.log("WS client disconnected");
