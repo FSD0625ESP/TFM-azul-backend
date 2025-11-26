@@ -310,3 +310,55 @@ export const getMyReservedLots = async (req, res) => {
     res.status(500).json({ message: "Error obteniendo reservas" });
   }
 };
+
+// ✅ Confirmar recogida por QR: el rider escanea el QR de la tienda
+export const confirmPickupByQRCode = async (req, res) => {
+  try {
+    const { storeId } = req.params;
+
+    const riderId = req.user && (req.user.id || req.user._id);
+    if (!riderId)
+      return res.status(401).json({ message: "Usuario no autenticado" });
+
+    if (!storeId)
+      return res.status(400).json({ message: "Falta el ID de la tienda" });
+
+    // Buscar el lote reservado por este rider en esta tienda que no haya sido recogido aún
+    const lot = await Lot.findOne({
+      shop: storeId,
+      rider: riderId,
+      reserved: true,
+      pickedUp: { $ne: true },
+    }).sort({ createdAt: 1 });
+
+    if (!lot)
+      return res.status(404).json({
+        message: "No hay lotes reservados para esta tienda o ya recogidos",
+      });
+
+    // Marcar como recogido
+    lot.pickedUp = true;
+    await lot.save();
+
+    // Notificar a la tienda
+    try {
+      const { notifyUser } = await import("../utils/notify.js");
+      const shopId = lot.shop?._id || lot.shop;
+      if (shopId) {
+        notifyUser(String(shopId), {
+          type: "pickup_confirmed",
+          orderId: String(lot._id),
+          riderId,
+          message: "El rider ha confirmado la recogida mediante QR",
+        });
+      }
+    } catch (e) {
+      console.error("Error sending pickup notification:", e);
+    }
+
+    res.json({ message: "Recogida confirmada", lot });
+  } catch (err) {
+    console.error("Error confirmando recogida:", err);
+    res.status(500).json({ message: "Error confirmando la recogida" });
+  }
+};

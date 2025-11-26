@@ -15,6 +15,10 @@ const lotSchema = new mongoose.Schema({
     type: Boolean,
     default: false, // Estado del lote (activo/inactivo)
   },
+  pickedUp: {
+    type: Boolean,
+    default: false, // Indica si el rider ya recogió el lote (confirmación por QR)
+  },
   name: {
     type: String,
     required: true, // Ej: "Primer plato", "Segundo plato", "Postre"
