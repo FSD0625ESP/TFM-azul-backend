@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Shop from "../models/Shop.js";
 import bcrypt from "bcryptjs";
+import cloudinary from "../config/cloudinary.js";
 
 // Registro de usuario
 export const registerUser = async (req, res) => {
@@ -108,5 +109,53 @@ export const loginUser = async (req, res) => {
     // Si ocurre un error en el proceso de login
     console.error("Login error:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Actualizar foto de perfil de usuario
+export const updateUserPhoto = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!req.file) {
+      return res.status(400).json({ message: "No image file provided" });
+    }
+
+    // Subir imagen a Cloudinary usando buffer
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "soulbites/users",
+          transformation: [
+            { width: 400, height: 400, crop: "fill", gravity: "face" },
+            { quality: "auto", fetch_format: "auto" }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(req.file.buffer);
+    });
+
+    // Actualizar usuario con nueva foto
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { photo: uploadResult.secure_url },
+      { new: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      message: "Photo updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error updating user photo:", error);
+    res.status(500).json({ message: "Error updating photo" });
   }
 };

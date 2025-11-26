@@ -2,6 +2,7 @@ import Store from "../models/Shop.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { createMark } from "./markController.js";
+import cloudinary from "../config/cloudinary.js";
 
 // Registrar Tienda
 export const registerStore = async (req, res) => {
@@ -153,5 +154,53 @@ export const loginStore = async (req, res) => {
     // Si ocurre un error en el proceso de login
     console.error("Store login error:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Actualizar foto de perfil de tienda
+export const updateStorePhoto = async (req, res) => {
+  try {
+    const { storeId } = req.params;
+    
+    if (!req.file) {
+      return res.status(400).json({ message: "No image file provided" });
+    }
+
+    // Subir imagen a Cloudinary usando buffer
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "soulbites/stores",
+          transformation: [
+            { width: 400, height: 400, crop: "fill" },
+            { quality: "auto", fetch_format: "auto" }
+          ]
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.end(req.file.buffer);
+    });
+
+    // Actualizar tienda con nueva foto
+    const updatedStore = await Store.findByIdAndUpdate(
+      storeId,
+      { photo: uploadResult.secure_url },
+      { new: true }
+    ).select("-password");
+
+    if (!updatedStore) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+
+    res.json({
+      message: "Photo updated successfully",
+      store: updatedStore,
+    });
+  } catch (error) {
+    console.error("Error updating store photo:", error);
+    res.status(500).json({ message: "Error updating photo" });
   }
 };
