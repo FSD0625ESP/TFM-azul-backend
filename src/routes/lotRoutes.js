@@ -10,10 +10,11 @@ import {
   confirmPickupByQRCode,
 } from "../controllers/lotController.js";
 import auth from "../middleware/auth.js";
+import upload from "../middleware/upload.js";
 
 const router = express.Router();
 
-router.post("/create", createLot);
+router.post("/create", upload.single("image"), createLot);
 router.get("/", getLots);
 router.get("/my-reserved", auth, getMyReservedLots);
 router.post("/:lotId/reserve", auth, reserveLot);

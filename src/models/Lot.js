@@ -27,6 +27,10 @@ const lotSchema = new mongoose.Schema({
     type: String,
     required: false, // Detalle opcional del plato
   },
+  image: {
+    type: String,
+    default: "", // URL de la imagen del lote en Cloudinary
+  },
   pickupDeadline: {
     type: Date,
     required: true, // Nueva propiedad: hora límite para recoger el pedido

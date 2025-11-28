@@ -1,4 +1,5 @@
 import Lot from "../models/Lot.js";
+import cloudinary from "../config/cloudinary.js";
 
 // ➕ Crear un nuevo lote individual (plato)
 export const createLot = async (req, res) => {
@@ -39,11 +40,34 @@ export const createLot = async (req, res) => {
       });
     }
 
+    // Subir imagen a Cloudinary si existe
+    let imageUrl = "";
+    if (req.file) {
+      const uploadResult = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "soulbites/lots",
+            transformation: [
+              { width: 800, height: 600, crop: "fill" },
+              { quality: "auto", fetch_format: "auto" }
+            ]
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        uploadStream.end(req.file.buffer);
+      });
+      imageUrl = uploadResult.secure_url;
+    }
+
     // Crear el nuevo lote
     const newLot = new Lot({
       shop: shopId,
       name,
       description,
+      image: imageUrl,
       pickupDeadline: deadlineDate,
     });
 
