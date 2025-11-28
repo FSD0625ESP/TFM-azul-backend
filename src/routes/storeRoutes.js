@@ -5,6 +5,7 @@ import {
   getAllStores,
   getStoreByUserId,
   updateStorePhoto,
+  changeStorePassword,
 } from "../controllers/storeController.js";
 import upload from "../middleware/upload.js";
 import auth from "../middleware/auth.js";
@@ -16,5 +17,6 @@ router.post("/login", loginStore);
 router.get("/user/:userId", getStoreByUserId);
 router.get("/", getAllStores);
 router.patch("/:storeId/photo", auth, upload.single("photo"), updateStorePhoto);
+router.patch("/change-password", auth, changeStorePassword);
 
 export default router;

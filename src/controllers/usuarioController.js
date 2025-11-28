@@ -116,7 +116,7 @@ export const loginUser = async (req, res) => {
 export const updateUserPhoto = async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     if (!req.file) {
       return res.status(400).json({ message: "No image file provided" });
     }
@@ -128,8 +128,8 @@ export const updateUserPhoto = async (req, res) => {
           folder: "soulbites/users",
           transformation: [
             { width: 400, height: 400, crop: "fill", gravity: "face" },
-            { quality: "auto", fetch_format: "auto" }
-          ]
+            { quality: "auto", fetch_format: "auto" },
+          ],
         },
         (error, result) => {
           if (error) reject(error);
@@ -157,5 +157,51 @@ export const updateUserPhoto = async (req, res) => {
   } catch (error) {
     console.error("Error updating user photo:", error);
     res.status(500).json({ message: "Error updating photo" });
+  }
+};
+
+// Cambiar contraseña de usuario
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id; // Del token JWT verificado por auth middleware
+
+    // Validar que los campos estén presentes
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: "Current password and new password are required",
+      });
+    }
+
+    // Validar longitud de la nueva contraseña
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        message: "New password must be at least 6 characters",
+      });
+    }
+
+    // Buscar el usuario
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Verificar que la contraseña actual es correcta
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // Hashear la nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+
+    // Guardar
+    await user.save();
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Error changing password:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };

@@ -161,7 +161,7 @@ export const loginStore = async (req, res) => {
 export const updateStorePhoto = async (req, res) => {
   try {
     const { storeId } = req.params;
-    
+
     if (!req.file) {
       return res.status(400).json({ message: "No image file provided" });
     }
@@ -173,8 +173,8 @@ export const updateStorePhoto = async (req, res) => {
           folder: "soulbites/stores",
           transformation: [
             { width: 400, height: 400, crop: "fill" },
-            { quality: "auto", fetch_format: "auto" }
-          ]
+            { quality: "auto", fetch_format: "auto" },
+          ],
         },
         (error, result) => {
           if (error) reject(error);
@@ -202,5 +202,51 @@ export const updateStorePhoto = async (req, res) => {
   } catch (error) {
     console.error("Error updating store photo:", error);
     res.status(500).json({ message: "Error updating photo" });
+  }
+};
+
+// Cambiar contraseña de tienda
+export const changeStorePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const storeId = req.user.id; // Del token JWT verificado por auth middleware
+
+    // Validar que los campos estén presentes
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: "Current password and new password are required",
+      });
+    }
+
+    // Validar longitud de la nueva contraseña
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        message: "New password must be at least 6 characters",
+      });
+    }
+
+    // Buscar la tienda
+    const store = await Store.findById(storeId);
+    if (!store) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+
+    // Verificar que la contraseña actual es correcta
+    const isMatch = await bcrypt.compare(currentPassword, store.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+
+    // Hashear la nueva contraseña
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    store.password = hashedPassword;
+
+    // Guardar
+    await store.save();
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Error changing store password:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
