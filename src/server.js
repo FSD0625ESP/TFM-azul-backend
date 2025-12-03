@@ -8,6 +8,7 @@ import storeRoutes from "./routes/storeRoutes.js";
 import createMarkRoutes from "./routes/createMark.js";
 import marksRoutes from "./routes/showMarks.js";
 import lotRoutes from "./routes/lotRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import "./lotExpireTime/lotCleanup.js";
 import Message from "./models/Message.js";
 import Lot from "./models/Lot.js";
@@ -38,6 +39,7 @@ app.use("/api/createMark", createMarkRoutes);
 app.use("/api/marks", marksRoutes);
 app.use("/api/lots", lotRoutes);
 app.use("/api/messages", messagesRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Ruta básica
 app.get("/", (req, res) => {
