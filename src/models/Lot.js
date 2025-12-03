@@ -19,6 +19,10 @@ const lotSchema = new mongoose.Schema({
     type: Boolean,
     default: false, // Indica si el rider ya recogió el lote (confirmación por QR)
   },
+  delivered: {
+    type: Boolean,
+    default: false, // Indica si el rider ya entregó el lote (confirmación por swipe up)
+  },
   name: {
     type: String,
     required: true, // Ej: "Primer plato", "Segundo plato", "Postre"

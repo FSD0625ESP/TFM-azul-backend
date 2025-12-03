@@ -49,8 +49,8 @@ export const createLot = async (req, res) => {
             folder: "soulbites/lots",
             transformation: [
               { width: 800, height: 600, crop: "fill" },
-              { quality: "auto", fetch_format: "auto" }
-            ]
+              { quality: "auto", fetch_format: "auto" },
+            ],
           },
           (error, result) => {
             if (error) reject(error);
@@ -384,5 +384,147 @@ export const confirmPickupByQRCode = async (req, res) => {
   } catch (err) {
     console.error("Error confirmando recogida:", err);
     res.status(500).json({ message: "Error confirmando la recogida" });
+  }
+};
+
+// 🚚 Entregar lote con validación de distancia (1km del destino homeless)
+export const deliverLot = async (req, res) => {
+  try {
+    const { lotId } = req.params;
+    const { riderLat, riderLng } = req.body;
+
+    if (!lotId) {
+      return res.status(400).json({ message: "Falta el ID del lote" });
+    }
+
+    const riderId = req.user && (req.user.id || req.user._id);
+    if (!riderId) {
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
+
+    if (!riderLat || !riderLng) {
+      return res
+        .status(400)
+        .json({ message: "Falta la ubicación del rider (lat, lng)" });
+    }
+
+    // Obtener el lote
+    const lot = await Lot.findById(lotId);
+    if (!lot) {
+      return res.status(404).json({ message: "Lote no encontrado" });
+    }
+
+    // Validar que el lote pertenece al rider y está recogido
+    const lotRiderId = String(lot.rider) === String(riderId);
+    if (!lotRiderId) {
+      return res.status(403).json({ message: "Este lote no te pertenece" });
+    }
+
+    if (!lot.pickedUp) {
+      return res
+        .status(400)
+        .json({ message: "El lote no ha sido recogido aún" });
+    }
+
+    if (lot.delivered) {
+      return res.status(400).json({ message: "El lote ya ha sido entregado" });
+    }
+
+    // Buscar todas las marcas homeless del sistema
+    const Mark = (await import("../models/Mark.js")).default;
+    const homelessMarks = await Mark.find({
+      type_mark: "homeless",
+      state: true,
+    });
+
+    if (homelessMarks.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No hay puntos homeless disponibles" });
+    }
+
+    // Función para calcular distancia usando Haversine
+    const calculateDistance = (lat1, lon1, lat2, lon2) => {
+      const R = 6371; // Radio de la Tierra en km
+      const dLat = (lat2 - lat1) * (Math.PI / 180);
+      const dLon = (lon2 - lon1) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * (Math.PI / 180)) *
+          Math.cos(lat2 * (Math.PI / 180)) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c; // Distancia en km
+    };
+
+    // Encontrar la marca homeless más cercana
+    let closestMark = null;
+    let minDistance = Infinity;
+
+    for (const mark of homelessMarks) {
+      const markLat = parseFloat(mark.lat);
+      const markLng = parseFloat(mark.long);
+      const distance = calculateDistance(
+        parseFloat(riderLat),
+        parseFloat(riderLng),
+        markLat,
+        markLng
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestMark = mark;
+      }
+    }
+
+    // Validar que la distancia sea menor a 50 metros (0.05km)
+    if (minDistance > 0.05) {
+      console.log(
+        `❌ Entrega rechazada: Distancia ${(minDistance * 1000).toFixed(
+          0
+        )}m > 50m. Pua más cercana: ${closestMark?.lat}, ${closestMark?.long}`
+      );
+      return res.status(400).json({
+        message: `Debes estar dentro de 50 metros del punto de entrega. Distancia actual: ${(
+          minDistance * 1000
+        ).toFixed(0)}m`,
+        distance: minDistance,
+        requiredDistance: 0.05,
+        closestMark: closestMark,
+      });
+    }
+
+    // Marcar como entregado
+    lot.delivered = true;
+    await lot.save();
+
+    // Notificar a la tienda
+    try {
+      const { notifyUser } = await import("../utils/notify.js");
+      const shopId = lot.shop?._id || lot.shop;
+      if (shopId) {
+        notifyUser(String(shopId), {
+          type: "delivery_confirmed",
+          orderId: String(lot._id),
+          riderId,
+          message: "El lote ha sido entregado al punto homeless",
+          deliveryPoint: closestMark,
+          distance: minDistance,
+        });
+      }
+    } catch (e) {
+      console.error("Error sending delivery notification:", e);
+    }
+
+    res.json({
+      message: "Lote entregado correctamente",
+      lot,
+      distance: minDistance,
+      deliveryPoint: closestMark,
+    });
+  } catch (err) {
+    console.error("Error entregando lote:", err);
+    res.status(500).json({ message: "Error entregando el lote" });
   }
 };

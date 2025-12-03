@@ -8,6 +8,7 @@ import {
   unreserveLot,
   getMyReservedLots,
   confirmPickupByQRCode,
+  deliverLot,
 } from "../controllers/lotController.js";
 import auth from "../middleware/auth.js";
 import upload from "../middleware/upload.js";
@@ -20,6 +21,7 @@ router.get("/my-reserved", auth, getMyReservedLots);
 router.post("/:lotId/reserve", auth, reserveLot);
 router.post("/:lotId/unreserve", auth, unreserveLot);
 router.post("/confirm-pickup/:storeId", auth, confirmPickupByQRCode);
+router.post("/:lotId/deliver", auth, deliverLot);
 router.put("/:lotId", updateLot);
 router.delete("/:lotId", deleteLot);
 
