@@ -182,4 +182,21 @@ router.get("/lots", adminAuth, async (req, res) => {
   }
 });
 
+// Eliminar lote
+router.delete("/lots/:lotId", adminAuth, async (req, res) => {
+  try {
+    const { lotId } = req.params;
+    const deletedLot = await Lot.findByIdAndDelete(lotId);
+
+    if (!deletedLot) {
+      return res.status(404).json({ message: "Lot not found" });
+    }
+
+    res.json({ message: "Lot deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting lot:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 export default router;
