@@ -9,6 +9,7 @@ import {
   getMyReservedLots,
   confirmPickupByQRCode,
   deliverLot,
+  checkDistance,
 } from "../controllers/lotController.js";
 import auth from "../middleware/auth.js";
 import upload from "../middleware/upload.js";
@@ -24,5 +25,8 @@ router.post("/confirm-pickup/:storeId", auth, confirmPickupByQRCode);
 router.post("/:lotId/deliver", auth, deliverLot);
 router.put("/:lotId", updateLot);
 router.delete("/:lotId", deleteLot);
+
+// ✅ CORRECTO → usamos el mismo middleware "auth"
+router.post("/:lotId/check-distance", auth, checkDistance);
 
 export default router;
