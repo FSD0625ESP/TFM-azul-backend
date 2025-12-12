@@ -28,7 +28,7 @@ const corsOptions = {
     "https://soulbites.netlify.app",
     "http://localhost:3000",
     "http://localhost:5173",
-    process.env.FRONTEND_URL || "https://soulbites.netlify.app"
+    process.env.FRONTEND_URL || "https://soulbites.netlify.app",
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
