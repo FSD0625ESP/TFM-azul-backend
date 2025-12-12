@@ -23,7 +23,18 @@ dotenv.config();
 const app = express();
 
 // Middlewares
-app.use(cors());
+// Middlewares
+app.use(
+  cors({
+    origin: [
+      "https://soulbites.netlify.app/",
+      "http://localhost:5173", // solo para desarrollo
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // Conexión a MongoDB
