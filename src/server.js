@@ -23,19 +23,20 @@ dotenv.config();
 const app = express();
 
 // Middlewares
-const corsOptions = {
-  origin: [
-    "https://soulbites.netlify.app",
-    /\.netlify\.app$/, // Permite cualquier subdominio de netlify.app
-    "http://localhost:3000",
-    "http://localhost:5173",
-    process.env.FRONTEND_URL || "https://soulbites.netlify.app",
-  ],
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-app.use(cors(corsOptions));
+// Permitir CORS desde cualquier origen para debug
+app.use((req, res, next) => {
+  const origin = req.get('origin');
+  res.header('Access-Control-Allow-Origin', origin || '*');
+  res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use(express.json());
 
 // Conexión a MongoDB
