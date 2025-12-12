@@ -528,3 +528,72 @@ export const deliverLot = async (req, res) => {
     res.status(500).json({ message: "Error entregando el lote" });
   }
 };
+// Comprueba si el rider está dentro del rango permitido para entregar (<= 50m)
+export const checkDistance = async (req, res) => {
+  try {
+    const { lotId } = req.params;
+    const { riderLat, riderLng } = req.body;
+
+    if (riderLat === undefined || riderLng === undefined) {
+      return res.status(400).json({ message: "Falta la ubicación (lat,lng)" });
+    }
+
+    const Mark = (await import("../models/Mark.js")).default;
+    const homelessMarks = await Mark.find({
+      type_mark: "homeless",
+      state: true,
+    });
+
+    if (homelessMarks.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No hay puntos homeless disponibles" });
+    }
+
+    const calculateDistance = (lat1, lon1, lat2, lon2) => {
+      const R = 6371;
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    let minDistance = Infinity;
+    let closestMark = null;
+
+    for (const mark of homelessMarks) {
+      const markLat = parseFloat(mark.lat);
+      const markLng = parseFloat(mark.long);
+      const distance = calculateDistance(
+        parseFloat(riderLat),
+        parseFloat(riderLng),
+        markLat,
+        markLng
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestMark = mark;
+      }
+    }
+
+    // allowed = true si está a <= 0.05 km (50 m)
+    const allowed = minDistance <= 0.05;
+
+    return res.json({
+      allowed,
+      distance: minDistance,
+      requiredDistance: 0.05,
+      closestMark,
+    });
+  } catch (err) {
+    console.error("Error en checkDistance:", err);
+    res.status(500).json({ message: "Error comprobando la distancia" });
+  }
+};
