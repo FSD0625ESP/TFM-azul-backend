@@ -26,7 +26,7 @@ const app = express();
 const corsOptions = {
   origin: [
     "https://soulbites.netlify.app",
-    /\.netlify\.app$/,  // Permite cualquier subdominio de netlify.app
+    /\.netlify\.app$/, // Permite cualquier subdominio de netlify.app
     "http://localhost:3000",
     "http://localhost:5173",
     process.env.FRONTEND_URL || "https://soulbites.netlify.app",
