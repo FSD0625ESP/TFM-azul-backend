@@ -27,7 +27,7 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://soulbites.netlify.app/",
+      "https://soulbites.netlify.app",
       "http://localhost:5173", // solo para desarrollo
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
