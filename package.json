@@ -21,6 +21,7 @@
   "description": "",
   "dependencies": {
     "@mapbox/mapbox-gl-directions": "^4.3.1",
+    "@sendinblue/client": "^3.3.1",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.8.0",
     "cors": "^2.8.5",

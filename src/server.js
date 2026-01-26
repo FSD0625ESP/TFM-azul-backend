@@ -9,6 +9,7 @@ import createMarkRoutes from "./routes/createMark.js";
 import marksRoutes from "./routes/showMarks.js";
 import lotRoutes from "./routes/lotRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 import "./lotExpireTime/lotCleanup.js";
 import Message from "./models/Message.js";
 import Lot from "./models/Lot.js";
@@ -29,7 +30,7 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", origin || "*");
   res.header(
     "Access-Control-Allow-Methods",
-    "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS"
+    "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
   );
   res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
@@ -56,6 +57,7 @@ app.use("/api/marks", marksRoutes);
 app.use("/api/lots", lotRoutes);
 app.use("/api/messages", messagesRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/auth", authRoutes);
 
 // Ruta básica
 app.get("/", (req, res) => {
@@ -116,7 +118,7 @@ wss.on("connection", (ws) => {
 
       if (!alreadyInRoom) {
         console.log(
-          `🔵 ${userType} (${userId || "unknown"}) joined order ${orderId}`
+          `🔵 ${userType} (${userId || "unknown"}) joined order ${orderId}`,
         );
       }
 
