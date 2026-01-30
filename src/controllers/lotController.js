@@ -25,7 +25,7 @@ export const createLot = async (req, res) => {
         today.getDate(),
         parseInt(hours),
         parseInt(minutes),
-        0
+        0,
       );
     } else {
       // Formato datetime completo
@@ -55,7 +55,7 @@ export const createLot = async (req, res) => {
           (error, result) => {
             if (error) reject(error);
             else resolve(result);
-          }
+          },
         );
         uploadStream.end(req.file.buffer);
       });
@@ -88,22 +88,9 @@ export const getLots = async (req, res) => {
       .populate("shop", "name address category phone")
       .populate("rider", "name email phone");
 
-    const now = new Date();
-
-    // Filtrar lotes según su estado de caducidad
+    // Filtrar solo lotes que NO han sido entregados ni recogidos
     const activeLots = allLots.filter((lot) => {
-      const pickupDeadline = new Date(lot.pickupDeadline);
-
-      if (lot.reserved) {
-        // Si está reservado, permitir 10 minutos extra después de la hora
-        const extendedDeadline = new Date(
-          pickupDeadline.getTime() + 10 * 60 * 1000
-        );
-        return now <= extendedDeadline;
-      } else {
-        // Si no está reservado, caducar en la hora exacta
-        return now <= pickupDeadline;
-      }
+      return !lot.delivered && !lot.pickedUp;
     });
 
     res.json(activeLots);
@@ -133,7 +120,7 @@ export const deleteLot = async (req, res) => {
       await User.findByIdAndUpdate(
         lot.rider,
         { $pull: { reservedLots: lotId } }, // ← elimina el lote del array reservedLots
-        { new: true }
+        { new: true },
       );
     }
 
@@ -174,7 +161,7 @@ export const updateLot = async (req, res) => {
         today.getDate(),
         parseInt(hours),
         parseInt(minutes),
-        0
+        0,
       );
     } else {
       // Formato datetime completo
@@ -195,7 +182,7 @@ export const updateLot = async (req, res) => {
         description,
         pickupDeadline: deadlineDate,
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedLot) {
@@ -240,7 +227,7 @@ export const reserveLot = async (req, res) => {
     await User.findByIdAndUpdate(
       riderId,
       { $push: { reservedLots: lotId } },
-      { new: true }
+      { new: true },
     );
 
     res.json({ message: "Lote reservado", lot });
@@ -290,7 +277,7 @@ export const unreserveLot = async (req, res) => {
     await User.findByIdAndUpdate(
       riderId,
       { $pull: { reservedLots: lotId } },
-      { new: true }
+      { new: true },
     );
 
     // Notificar a la tienda (shop) que el rider canceló la reserva
@@ -469,7 +456,7 @@ export const deliverLot = async (req, res) => {
         parseFloat(riderLat),
         parseFloat(riderLng),
         markLat,
-        markLng
+        markLng,
       );
 
       if (distance < minDistance) {
@@ -482,8 +469,8 @@ export const deliverLot = async (req, res) => {
     if (minDistance > 0.05) {
       console.log(
         `❌ Entrega rechazada: Distancia ${(minDistance * 1000).toFixed(
-          0
-        )}m > 50m. Pua más cercana: ${closestMark?.lat}, ${closestMark?.long}`
+          0,
+        )}m > 50m. Pua más cercana: ${closestMark?.lat}, ${closestMark?.long}`,
       );
       return res.status(400).json({
         message: `Debes estar dentro de 50 metros del punto de entrega. Distancia actual: ${(
@@ -574,7 +561,7 @@ export const checkDistance = async (req, res) => {
         parseFloat(riderLat),
         parseFloat(riderLng),
         markLat,
-        markLng
+        markLng,
       );
 
       if (distance < minDistance) {
