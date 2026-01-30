@@ -12,7 +12,9 @@ router.get("/", async (req, res) => {
       pickedUp: false, // Solo lotes que no han sido recogidos
       delivered: false, // y no han sido entregados
     });
-    const storeIds = [...new Set(lots.map((lot) => String(lot.shop)))];
+
+    // Convertir los shop IDs a ObjectId para la comparación
+    const storeIds = [...new Set(lots.map((lot) => lot.shop))];
 
     console.log("Store IDs with lots:", storeIds);
 
