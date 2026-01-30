@@ -46,7 +46,23 @@ app.use(express.json());
 // Conexión a MongoDB
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => console.log("Connected to MongoDB"))
+  .then(async () => {
+    console.log("Connected to MongoDB");
+
+    // Eliminar índice único de 'type' si existe (fix para legacy schema)
+    try {
+      const db = mongoose.connection.db;
+      const storesCollection = db.collection("stores");
+      await storesCollection.dropIndex("type_1");
+      console.log("✅ Removed legacy unique index on 'type' field");
+    } catch (err) {
+      // El índice no existe o ya fue eliminado
+      if (err.code !== 27) {
+        // 27 = IndexNotFound
+        console.log("ℹ️  'type' index already removed or doesn't exist");
+      }
+    }
+  })
   .catch((err) => console.error("Error connecting to MongoDB:", err));
 
 // Rutas backend
