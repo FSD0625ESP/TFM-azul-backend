@@ -87,7 +87,7 @@ export const loginUser = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" } // Por defecto, expira en 1 dia
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }, // Por defecto, expira en 1 dia
     );
 
     // Preparamos los datos que enviaremos como respuesta (sin contraseña)
@@ -97,6 +97,7 @@ export const loginUser = async (req, res) => {
       email: user.email,
       photo: user.photo,
       phone: user.phone,
+      theme: user.theme || "light",
     };
 
     // Respondemos con éxito: token + datos del usuario
@@ -134,7 +135,7 @@ export const updateUserPhoto = async (req, res) => {
         (error, result) => {
           if (error) reject(error);
           else resolve(result);
-        }
+        },
       );
       uploadStream.end(req.file.buffer);
     });
@@ -143,7 +144,7 @@ export const updateUserPhoto = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { photo: uploadResult.secure_url },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     if (!updatedUser) {
@@ -202,6 +203,40 @@ export const changePassword = async (req, res) => {
     res.json({ message: "Password changed successfully" });
   } catch (error) {
     console.error("Error changing password:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Actualizar tema del usuario
+export const updateUserTheme = async (req, res) => {
+  try {
+    const { theme } = req.body;
+    const userId = req.user.id; // Del token JWT verificado por auth middleware
+
+    // Validar que el tema sea válido
+    if (!theme || !["light", "dark"].includes(theme)) {
+      return res.status(400).json({
+        message: "Invalid theme. Must be 'light' or 'dark'",
+      });
+    }
+
+    // Actualizar el tema del usuario
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { theme },
+      { new: true },
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      message: "Theme updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Error updating theme:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

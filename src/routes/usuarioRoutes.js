@@ -4,6 +4,7 @@ import {
   loginUser,
   updateUserPhoto,
   changePassword,
+  updateUserTheme,
 } from "../controllers/usuarioController.js";
 import upload from "../middleware/upload.js";
 import auth from "../middleware/auth.js";
@@ -21,5 +22,8 @@ router.patch("/:userId/photo", auth, upload.single("photo"), updateUserPhoto);
 
 // Change password
 router.patch("/change-password", auth, changePassword);
+
+// Update theme
+router.patch("/theme", auth, updateUserTheme);
 
 export default router;

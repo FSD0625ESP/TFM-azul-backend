@@ -39,7 +39,7 @@ export const registerStore = async (req, res) => {
       await createMark(
         newStore._id,
         coordinates.lat.toString(),
-        coordinates.lng.toString()
+        coordinates.lng.toString(),
       );
     }
 
@@ -130,7 +130,7 @@ export const loginStore = async (req, res) => {
     const token = jwt.sign(
       { id: store._id, email: store.email },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" } // expira en 1 dia
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }, // expira en 1 dia
     );
 
     // Preparamos los datos que enviaremos como respuesta (sin password)
@@ -142,6 +142,7 @@ export const loginStore = async (req, res) => {
       address: store.address,
       photo: store.photo,
       phone: store.phone,
+      theme: store.theme || "light",
     };
 
     // Respondemos con éxito: token + datos de la tienda
@@ -179,7 +180,7 @@ export const updateStorePhoto = async (req, res) => {
         (error, result) => {
           if (error) reject(error);
           else resolve(result);
-        }
+        },
       );
       uploadStream.end(req.file.buffer);
     });
@@ -188,7 +189,7 @@ export const updateStorePhoto = async (req, res) => {
     const updatedStore = await Store.findByIdAndUpdate(
       storeId,
       { photo: uploadResult.secure_url },
-      { new: true }
+      { new: true },
     ).select("-password");
 
     if (!updatedStore) {
@@ -247,6 +248,40 @@ export const changeStorePassword = async (req, res) => {
     res.json({ message: "Password changed successfully" });
   } catch (error) {
     console.error("Error changing store password:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Actualizar tema de la tienda
+export const updateStoreTheme = async (req, res) => {
+  try {
+    const { theme } = req.body;
+    const storeId = req.user.id; // Del token JWT verificado por auth middleware
+
+    // Validar que el tema sea válido
+    if (!theme || !["light", "dark"].includes(theme)) {
+      return res.status(400).json({
+        message: "Invalid theme. Must be 'light' or 'dark'",
+      });
+    }
+
+    // Actualizar el tema de la tienda
+    const updatedStore = await Store.findByIdAndUpdate(
+      storeId,
+      { theme },
+      { new: true },
+    ).select("-password");
+
+    if (!updatedStore) {
+      return res.status(404).json({ message: "Store not found" });
+    }
+
+    res.json({
+      message: "Theme updated successfully",
+      store: updatedStore,
+    });
+  } catch (error) {
+    console.error("Error updating theme:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };

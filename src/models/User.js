@@ -24,6 +24,11 @@ const UserSchema = new mongoose.Schema({
   phone: {
     type: Number,
   },
+  theme: {
+    type: String,
+    enum: ["light", "dark"],
+    default: "light",
+  },
   reservedLots: [
     {
       type: mongoose.Schema.Types.ObjectId,

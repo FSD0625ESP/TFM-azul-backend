@@ -35,6 +35,11 @@ const StoreSchema = new mongoose.Schema({
   phone: {
     type: Number,
   },
+  theme: {
+    type: String,
+    enum: ["light", "dark"],
+    default: "light",
+  },
 });
 
 const Store = mongoose.model("Store", StoreSchema);
