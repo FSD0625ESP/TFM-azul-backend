@@ -10,11 +10,11 @@ const createAdminUser = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("Connected to MongoDB");
 
-    // Verificar si ya existe
+    // Eliminar admin existente si existe
     const existingAdmin = await Admin.findOne({ email: "admin@soulbites.com" });
     if (existingAdmin) {
-      console.log("Admin user already exists");
-      process.exit(0);
+      await Admin.deleteOne({ email: "admin@soulbites.com" });
+      console.log("Existing admin deleted");
     }
 
     // Crear admin con contraseña "admin123"
